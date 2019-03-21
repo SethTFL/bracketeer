@@ -1,10 +1,50 @@
 <!DOCTYPE html>
 <html>
     <head>
-
+        <style>
+            .Band
+            {
+                position:relative;
+            }
+            .Center
+            {
+                position:relative;
+                max-width:960px;
+                margin:0 auto;
+            }
+            .Pad
+            {
+                padding:2rem;
+            }
+            .Tier
+            {
+                display:inline-block;
+                background:#eee;
+            }
+        </style>
     </head>
     <body>
-        <div id="App"></div>
+        <div class="Band Header">
+            <div class="Center">
+                <div class="Pad">
+                    <p>
+                        Bet on the people betting on the players! What fun.
+                    </p>
+                    <p>
+                        For each tier, bet on which TFL member(s) will place in the top three in the office bracket for that round. Highest score at the end wins.
+                    </p>
+                    <p>
+                        Enter three names for each round. For every name that was in the <em>top three</em> that round, you will be awarded a point.
+                        The <em>top three</em> for a round is: everyone tied for first, second, and third place in the office ESPN Tournament Challenge.
+                    </p>
+                    <p>
+                        After you fill the form out, a link to email seth your results will show up. If more than three people sign up, the winner gets a starbucks gift card bragging rights. Tied winners can divide the coffee. But the cred? Ah, that's all yours for <em>life</em>.
+                    </p>
+                    <hr>
+                    <div id="App"></div>
+                </div>
+            </div>
+        </div>
         <script type="module">
             import { html, render } from 'https://unpkg.com/lit-html/lit-html.js';
             
@@ -13,6 +53,20 @@
             var Render;
 
             Methods = {
+                CheckDone:()=>
+                {
+                    var i;
+                    for(i=0; i<Model.Tiers.length; i++)
+                    {
+                        if(!Model.Tiers[i].Filled)
+                        {
+                            Model.Completed = false;
+                            return;
+                        }
+                    }
+                    Model.Completed = true;
+                    Model.Code = Methods.GenerateCode();
+                },
                 Reset:(inTier)=>
                 {
                     inTier.Open = Model.People.slice();
@@ -22,6 +76,11 @@
                 Add:(inTier, inIndex)=>
                 {
                     inTier.Closed.push(inTier.Open.splice(inIndex, 1));
+                    if(inTier.Closed.length >= 3)
+                    {
+                        inTier.Filled = true;
+                        Methods.CheckDone();
+                    }
                     Render.Update(Model, Methods);
                 },
                 Remove:(inTier, inIndex)=>
@@ -32,24 +91,37 @@
                     name = inTier.Closed.splice(inIndex, 1);
                     for(i=0; i<inTier.Open.length; i++)
                     {
-                        console.log("checking", name, "against", inTier.Open[i]);
                         if(name < inTier.Open[i])
                         {
                             inTier.Open.splice(i, 0, name);
                             break;
                         }
                     }
+                    inTier.Filled = false;
+                    Model.Completed = false;
                     Render.Update(Model, Methods);
                 },
-                Submit:()=>
+                GenerateCode:()=>
                 {
+                    var i;
+                    var tier;
+                    var output;
 
+                    output = [];
+                    for(i=0; i<Model.Tiers.length; i++)
+                    {
+                        tier = Model.Tiers[i];
+                        output.push({
+                            Round:tier.Name,
+                            Names:tier.Closed
+                        });
+                    }
+                    return btoa(JSON.stringify(output));
                 }
             };
 
             Model = {
                 People:[
-                    ":( no one",
                     "Adam", "Alistair", "Amy",
                     "Barbara", "Bob",
                     "Caleb", "Carolyn",
@@ -59,17 +131,19 @@
                     "Jennifer", "Jenny", "John", "Jon",
                     "Kallen", "Karol",
                     "Leah",
-                    "Matt", "Mike",
+                    "Matt", "Mike", "Mike's children",
                     "Nancy",
                     "Rebekah",
                     "Sarah P", "Sarah S", "Stacey"
                 ],
                 Tiers:[
-                    {Name:"Round 2",  Open:[], Closed:[]},
-                    {Name:"Sweet 16", Open:[], Closed:[]},
-                    {Name:"Elite 8",  Open:[], Closed:[]},
-                    {Name:"Final 4",  Open:[], Closed:[]}
-                ]
+                    {Name:"Round 2",  Open:[], Closed:[], Filled:false},
+                    {Name:"Sweet 16", Open:[], Closed:[], Filled:false},
+                    {Name:"Elite 8",  Open:[], Closed:[], Filled:false},
+                    {Name:"Final 4",  Open:[], Closed:[], Filled:false}
+                ],
+                Completed:false,
+                Code:""
             };
 
             Render = {};
@@ -79,9 +153,26 @@
             };
             Render.Layout = (inModel, inMethods) =>
             {
+                var message;
+                var output;
+
+                var email = "Hi Seth, \nNot that I have a gambling problem, but your idea to bet on betting really appeals to me. \nHere's that weird code your dumb site generated. Don't screw my bracket up: \n"+inModel.Code;
+                var href = "mailto:strowbridge@truthforlife.org?subject=I <3  &body=" + encodeURIComponent(email);
+
+                if(inModel.Completed)
+                {
+                    message = html`
+                    <p>
+                        You actually did it! Good luck, we're all counting on you. <a href=${href}>Email Seth</a>
+                    </p>`;
+                }
+                else
+                {
+                    message = html`<p>Please fill out three names for each round:</p>`;
+                }
                 return html`
                 <div>
-                    <h2>Tiers</h2>
+                    ${ message }
                     ${inModel.Tiers.map( (inItem)=>{
                         return Render.Tier(inItem, inMethods);
                     } )}
@@ -90,24 +181,35 @@
             },
             Render.Tier = (inTier, inMethods) =>
             {
-                return html`
-                <div>
-                    <h3>${inTier.Name}</h3>
-                    <ol>
-                    ${inTier.Closed.map( (inItem, inIndex)=>{
-                        return html`
-                        <li><span>${inItem}</span> <button @click=${ ()=>{inMethods.Remove(inTier, inIndex);} }>X</button></li>
-                        `;
-                    } )}
-                    </ol>
+                var option;
+                if(inTier.Filled)
+                {
+                    option = html``;
+                }
+                else
+                {
+                    option = html`
                     <select @change=${ (inEvent)=>{ inMethods.Add(inTier, inEvent.target.selectedIndex-1); inEvent.target.selectedIndex=0;} }>
-                        <option>choose a #${inTier.Closed.length+1} slot</option>
+                        <option>- add a name -</option>
                     ${inTier.Open.map( (inItem, inIndex)=>{
                         return html`
                         <option>${inItem}</option>
                         `;
                     } )}
                     </select>
+                    `;
+                }
+                return html`
+                <div class="Tier">
+                    <h3>${inTier.Name}</h3>
+                    <ul>
+                    ${inTier.Closed.map( (inItem, inIndex)=>{
+                        return html`
+                        <li><span>${inItem}</span> <button @click=${ ()=>{inMethods.Remove(inTier, inIndex);} }>X</button></li>
+                        `;
+                    } )}
+                    </ul>
+                    ${ option }
                 </div>
                 `;
             };
