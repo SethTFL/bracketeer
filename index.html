@@ -1,7 +1,14 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link href="https://fonts.googleapis.com/css?family=Russo+One|Ubuntu" rel="stylesheet">
         <style>
+            body
+            {
+                background:#000;
+                margin:0 auto;
+                font-family:"Open Sans";
+            }
             .Band
             {
                 position:relative;
@@ -14,17 +21,61 @@
             }
             .Pad
             {
-                padding:2rem;
+                padding:1rem;
+            }
+        </style>
+        <style>
+            .Band.Header
+            {
+                background:#f00;
+            }
+            h1
+            {
+                color:#fff;
+                text-transform:uppercase;
+                font-family:"Russo One";
+            }
+            .Band.Copy .Center
+            {
+                background:rgba(256, 256, 256, 0.8);
+            }
+            .Tiers
+            {
+                overflow:hidden;
             }
             .Tier
             {
-                display:inline-block;
+                display:block;
+                float:left;
+                margin:10px;
                 background:#eee;
+            }
+            .Tier h3
+            {
+                color:#F00;
+                font-family:"Russo One";
+                text-transform:uppercase;
+            }
+            .Tier ul
+            {
+                padding-left:1em;
+            }
+            .Message
+            {
+                font-weight:bold;
             }
         </style>
     </head>
     <body>
+        <img style="position:fixed; bottom:0; left:0; width:100%; height:auto;" src="background.jpg"/>
         <div class="Band Header">
+            <div class="Center">
+                <div class="Pad">
+                    <h1>Bracketeer</h1>
+                </div>
+            </div>
+        </div>
+        <div class="Band Copy">
             <div class="Center">
                 <div class="Pad">
                     <p>
@@ -137,10 +188,11 @@
                     "Sarah P", "Sarah S", "Stacey"
                 ],
                 Tiers:[
-                    {Name:"Round 2",  Open:[], Closed:[], Filled:false},
+                    {Name:"R32",  Open:[], Closed:[], Filled:false},
                     {Name:"Sweet 16", Open:[], Closed:[], Filled:false},
                     {Name:"Elite 8",  Open:[], Closed:[], Filled:false},
-                    {Name:"Final 4",  Open:[], Closed:[], Filled:false}
+                    {Name:"Final 4",  Open:[], Closed:[], Filled:false},
+                    {Name:"NGC",  Open:[], Closed:[], Filled:false}
                 ],
                 Completed:false,
                 Code:""
@@ -157,21 +209,21 @@
                 var output;
 
                 var email = "Hi Seth, \nNot that I have a gambling problem, but your idea to bet on betting really appeals to me. \nHere's that weird code your dumb site generated. Don't screw my bracket up: \n"+inModel.Code;
-                var href = "mailto:strowbridge@truthforlife.org?subject=I <3  &body=" + encodeURIComponent(email);
+                var href = "mailto:strowbridge@truthforlife.org?subject=I <3 sports &body=" + encodeURIComponent(email);
 
                 if(inModel.Completed)
                 {
                     message = html`
-                    <p>
+                    <p class="Message After">
                         You actually did it! Good luck, we're all counting on you. <a href=${href}>Email Seth</a>
                     </p>`;
                 }
                 else
                 {
-                    message = html`<p>Please fill out three names for each round:</p>`;
+                    message = html`<p class="Message Before">Please fill out three names for each round:</p>`;
                 }
                 return html`
-                <div>
+                <div class="Tiers">
                     ${ message }
                     ${inModel.Tiers.map( (inItem)=>{
                         return Render.Tier(inItem, inMethods);
@@ -184,7 +236,7 @@
                 var option;
                 if(inTier.Filled)
                 {
-                    option = html``;
+                    option = html`<p>Nice!</p>`;
                 }
                 else
                 {
@@ -201,15 +253,17 @@
                 }
                 return html`
                 <div class="Tier">
-                    <h3>${inTier.Name}</h3>
-                    <ul>
-                    ${inTier.Closed.map( (inItem, inIndex)=>{
-                        return html`
-                        <li><span>${inItem}</span> <button @click=${ ()=>{inMethods.Remove(inTier, inIndex);} }>X</button></li>
-                        `;
-                    } )}
-                    </ul>
-                    ${ option }
+                    <div class="Pad">
+                        <h3>${inTier.Name}</h3>
+                        <ul>
+                        ${inTier.Closed.map( (inItem, inIndex)=>{
+                            return html`
+                            <li><span>${inItem}</span> <button @click=${ ()=>{inMethods.Remove(inTier, inIndex);} }>X</button></li>
+                            `;
+                        } )}
+                        </ul>
+                        ${ option }
+                    </div>
                 </div>
                 `;
             };
