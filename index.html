@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+    <head>
+
+    </head>
+    <body>
+        <div id="App"></div>
+        <script type="module">
+            import { html, render } from 'https://unpkg.com/lit-html/lit-html.js';
+            
+            var Model;
+            var Methods;
+            var Render;
+
+            Methods = {
+                Reset:(inTier)=>
+                {
+                    inTier.Open = Model.People.slice();
+                    inTier.Closed = [];
+                },
+                Add:(inTier, inIndex)=>
+                {
+                    inTier.Closed.push(inTier.Open.splice(inIndex, 1));
+                },
+                Submit:()=>
+                {
+
+                }
+            };
+
+            Model = {
+                People:[
+                    "no one :(",
+                    "Adam", "Alistair", "Amy",
+                    "Barbara", "Bob",
+                    "Caleb", "Carolyn",
+                    "Donna",
+                    "Ed", "Emily",
+                    "Jake", "Jeannie",
+                    "Jennifer", "Jenny", "John", "Jon",
+                    "Kallen", "Karol",
+                    "Leah",
+                    "Matt", "Mike",
+                    "Nancy",
+                    "Rebekah",
+                    "Sarah P", "Sarah S", "Stacey"
+                ],
+                Tiers:[
+                    {Name:"Round 2",  Open:[], Closed:[]},
+                    {Name:"Sweet 16", Open:[], Closed:[]},
+                    {Name:"Elite 8",  Open:[], Closed:[]},
+                    {Name:"Final 4",  Open:[], Closed:[]}
+                ]
+            };
+
+            Render = {};
+            Render.Update = () =>
+            {
+                render( Render.Tree(inApp), document.querySelector("#App"));
+            };
+            Render.Layout = () =>
+            {
+                
+            },
+            Render.Tier = (inTier, inMethods) =>
+            {
+                return html`
+                <div>
+                    <h3>${inTier.Name}</h3>
+                    <ol>
+                        ${inTier.Closed.map( (inItem, inIndex)=>{
+                            return html`
+                            <li><span>${inItem}</span> <button @click=${ ()=>{inMethods.Remove(inTier, inIndex);} }>X</button></li>
+                            `;
+                        } )}
+                    </ol>
+                    <select>
+                        <option>choose ${inTier.Closed.length+1} slot</option>
+                        ${inTier.Open.map( (inItem, inIndex)=>{
+                            return html`
+                            <option>${inItem}</option>
+                            `;
+                        } )}
+                    </select>
+                </div>
+                `;
+            };
+
+        </script>
+    </body>
+</html>
