@@ -17,10 +17,29 @@
                 {
                     inTier.Open = Model.People.slice();
                     inTier.Closed = [];
+                    Render.Update(Model, Methods);
                 },
                 Add:(inTier, inIndex)=>
                 {
                     inTier.Closed.push(inTier.Open.splice(inIndex, 1));
+                    Render.Update(Model, Methods);
+                },
+                Remove:(inTier, inIndex)=>
+                {
+                    var i;
+                    var name;
+
+                    name = inTier.Closed.splice(inIndex, 1);
+                    for(i=0; i<inTier.Open.length; i++)
+                    {
+                        console.log("checking", name, "against", inTier.Open[i]);
+                        if(name < inTier.Open[i])
+                        {
+                            inTier.Open.splice(i, 0, name);
+                            break;
+                        }
+                    }
+                    Render.Update(Model, Methods);
                 },
                 Submit:()=>
                 {
@@ -30,7 +49,7 @@
 
             Model = {
                 People:[
-                    "no one :(",
+                    ":( no one",
                     "Adam", "Alistair", "Amy",
                     "Barbara", "Bob",
                     "Caleb", "Carolyn",
@@ -54,13 +73,20 @@
             };
 
             Render = {};
-            Render.Update = () =>
+            Render.Update = (inModel, inMethods) =>
             {
-                render( Render.Tree(inApp), document.querySelector("#App"));
+                render( Render.Layout(inModel, inMethods), document.querySelector("#App"));
             };
-            Render.Layout = () =>
+            Render.Layout = (inModel, inMethods) =>
             {
-                
+                return html`
+                <div>
+                    <h2>Tiers</h2>
+                    ${inModel.Tiers.map( (inItem)=>{
+                        return Render.Tier(inItem, inMethods);
+                    } )}
+                </div>
+                `;
             },
             Render.Tier = (inTier, inMethods) =>
             {
@@ -68,24 +94,30 @@
                 <div>
                     <h3>${inTier.Name}</h3>
                     <ol>
-                        ${inTier.Closed.map( (inItem, inIndex)=>{
-                            return html`
-                            <li><span>${inItem}</span> <button @click=${ ()=>{inMethods.Remove(inTier, inIndex);} }>X</button></li>
-                            `;
-                        } )}
+                    ${inTier.Closed.map( (inItem, inIndex)=>{
+                        return html`
+                        <li><span>${inItem}</span> <button @click=${ ()=>{inMethods.Remove(inTier, inIndex);} }>X</button></li>
+                        `;
+                    } )}
                     </ol>
-                    <select>
-                        <option>choose ${inTier.Closed.length+1} slot</option>
-                        ${inTier.Open.map( (inItem, inIndex)=>{
-                            return html`
-                            <option>${inItem}</option>
-                            `;
-                        } )}
+                    <select @change=${ (inEvent)=>{ inMethods.Add(inTier, inEvent.target.selectedIndex-1); inEvent.target.selectedIndex=0;} }>
+                        <option>choose a #${inTier.Closed.length+1} slot</option>
+                    ${inTier.Open.map( (inItem, inIndex)=>{
+                        return html`
+                        <option>${inItem}</option>
+                        `;
+                    } )}
                     </select>
                 </div>
                 `;
             };
 
+            var i;
+            for(i=0; i<Model.Tiers.length; i++)
+            {
+                Methods.Reset(Model.Tiers[i]);
+            }
+            console.log(Model);
         </script>
     </body>
 </html>
